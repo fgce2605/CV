@@ -1577,15 +1577,15 @@ function saveEntry(){
 ════════════════════════════════════════════════════════════ */
 async function callAI(prompt){
   try{
-    const r = await fetch('https://api.anthropic.com/v1/messages',{
+    const r = await fetch('/api/claude',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:1000, messages:[{role:'user',content:prompt}] })
+      body:JSON.stringify({ model:'gemini-2.0-flash', max_tokens:1000, messages:[{role:'user',content:prompt}] })
     });
-    if(!r.ok) throw new Error(r.status);
     const d = await r.json();
+    if(!r.ok) throw new Error(d.error || ('HTTP '+r.status));
     return d.content.map(c=>c.type==='text'?c.text:'').join('');
-  } catch(e){ return `[AI Error: ${e.message}. Check API key in Anthropic settings.]`; }
+  } catch(e){ return `[AI Error: ${e.message}]`; }
 }
 
 function showAI(text, acts=[]){
@@ -2215,13 +2215,13 @@ For experience/project descriptions, preserve bullet points using •. Return ON
     content = `${instructions}\n\nRESUME TEXT:\n${text.substring(0,12000)}`;
   }
 
-  const r = await fetch('https://api.anthropic.com/v1/messages',{
+  const r = await fetch('/api/claude',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:1000, messages:[{role:'user',content}] })
+    body:JSON.stringify({ model:'gemini-2.0-flash', max_tokens:1000, messages:[{role:'user',content}] })
   });
-  if(!r.ok) throw new Error('AI parsing failed (status '+r.status+'). Please try again.');
   const d = await r.json();
+  if(!r.ok) throw new Error(d.error || 'AI parsing failed (status '+r.status+'). Please try again.');
   const raw = d.content.map(c=>c.type==='text'?c.text:'').join('');
   try{
     return JSON.parse(raw.replace(/```[a-z]*/gi,'').replace(/```/g,'').trim());
